@@ -65,7 +65,7 @@ func Init(customConf string) error {
 	// ****************************
 	// ----- Web settings -----
 	// ****************************
-	if err = File.Section("web").MapTo(&Web); err != nil {
+	if err = File.Section("rpc").MapTo(&Rpc); err != nil {
 		return errors.Wrap(err, "mapping [web] section")
 	}
 
@@ -74,14 +74,6 @@ func Init(customConf string) error {
 	// ****************************
 	if err = File.Section("session").MapTo(&Session); err != nil {
 		return errors.Wrap(err, "mapping [session] section")
-	}
-
-	// ***************************
-	// ----- i18n settings -----
-	// ***************************
-	I18n = new(i18nConf)
-	if err = File.Section("i18n").MapTo(&I18n); err != nil {
-		return errors.Wrap(err, "mapping [i18n] section")
 	}
 
 	if err = File.Section("cache").MapTo(&Cache); err != nil {

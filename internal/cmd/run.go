@@ -25,7 +25,7 @@ func RpcRun(c *cli.Context) error {
 		return err
 	}
 
-	app.Start(conf.Web.HttpPort)
+	app.Start(conf.Rpc.HttpPort)
 	return nil
 }
 
@@ -35,6 +35,6 @@ func RpcRunDebug() error {
 		return err
 	}
 
-	app.Start(conf.Web.HttpPort)
+	app.Start(conf.Rpc.HttpPort)
 	return nil
 }

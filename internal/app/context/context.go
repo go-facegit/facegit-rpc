@@ -165,7 +165,7 @@ func (c *Context) NotFoundOrError(err error, msg string) {
 // RedirectSubpath responses redirection with given location and status.
 // It prepends setting.Server.Subpath to the location string.
 func (c *Context) RedirectSubpath(location string, status ...int) {
-	c.Redirect(conf.Web.Subpath+location, status...)
+	c.Redirect(conf.Rpc.Subpath+location, status...)
 }
 
 // Contexter initializes a classic context for a request.
@@ -181,46 +181,12 @@ func Contexter() macaron.Handler {
 
 		c.Data["PageStartTime"] = time.Now()
 
-		if len(conf.Web.AccessControlAllowOrigin) > 0 {
-			c.Header().Set("Access-Control-Allow-Origin", conf.Web.AccessControlAllowOrigin)
+		if len(conf.Rpc.AccessControlAllowOrigin) > 0 {
+			c.Header().Set("Access-Control-Allow-Origin", conf.Rpc.AccessControlAllowOrigin)
 			c.Header().Set("Access-Control-Allow-Credentials", "true")
 			c.Header().Set("Access-Control-Max-Age", "3600")
 			c.Header().Set("Access-Control-Allow-Headers", "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With")
 		}
-
-		// Get user from session or header when possible
-		// uid := c.Session.Get("uid")
-		// if uid != nil {
-		// 	u, err := db.UserGetById(uid.(int64))
-		// 	if err == nil {
-		// 		c.IsLogged = true
-		// 		c.Data["IsLogged"] = c.IsLogged
-		// 		c.Data["LoggedUser"] = u
-		// 		c.Data["LoggedUserID"] = u.Id
-		// 		c.Data["LoggedUserName"] = u.Name
-		// 		c.Data["IsAdmin"] = u.IsAdmin
-		// 	}
-
-		// 	c.User = &u
-		// 	c.Data["MenuDomains"], _ = db.DomainVaildList(1, 10)
-		// } else {
-		// 	c.Data["LoggedUserID"] = 0
-		// 	c.Data["LoggedUserName"] = ""
-		// }
-
-		// c.Data["CSRFToken"] = x.GetToken()
-		// c.Data["CSRFTokenHTML"] = template.Safe(`<input type="hidden" name="_csrf" value="` + x.GetToken() + `">`)
-		// log.Debugf("Session ID: %s", sess.ID())
-		// log.Debugf("CSRF Token: %s", c.Data["CSRFToken"])
-
-		// c.Data["ShowRegistrationButton"] = !conf.Auth.DisableRegistration
-		// c.Data["ShowFooterBranding"] = conf.Other.ShowFooterBranding
-
-		// c.renderNoticeBanner()
-
-		// avoid iframe use by other.
-		// c.Header().Set("X-Content-Type-Options", "nosniff")
-		// c.Header().Set("X-Frame-Options", "DENY")
 
 		ctx.Map(c)
 	}

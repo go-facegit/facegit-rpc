@@ -62,7 +62,7 @@ func setRouter(m *macaron.Macaron) *macaron.Macaron {
 		Provider:       conf.Session.Provider,
 		ProviderConfig: conf.Session.ProviderConfig,
 		CookieName:     conf.Session.CookieName,
-		CookiePath:     conf.Web.Subpath,
+		CookiePath:     conf.Rpc.Subpath,
 		Gclifetime:     conf.Session.GCInterval,
 		Maxlifetime:    conf.Session.MaxLifeTime,
 		Secure:         conf.Session.CookieSecure,
