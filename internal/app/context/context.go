@@ -16,7 +16,6 @@ import (
 	"gopkg.in/macaron.v1"
 
 	"github.com/go-facegit/facegit-rpc/internal/app/form"
-	"github.com/go-facegit/facegit-rpc/internal/app/template"
 	"github.com/go-facegit/facegit-rpc/internal/conf"
 	// "github.com/go-facegit/facegit-rpc/internal/db"
 )
@@ -209,8 +208,8 @@ func Contexter() macaron.Handler {
 		// 	c.Data["LoggedUserName"] = ""
 		// }
 
-		c.Data["CSRFToken"] = x.GetToken()
-		c.Data["CSRFTokenHTML"] = template.Safe(`<input type="hidden" name="_csrf" value="` + x.GetToken() + `">`)
+		// c.Data["CSRFToken"] = x.GetToken()
+		// c.Data["CSRFTokenHTML"] = template.Safe(`<input type="hidden" name="_csrf" value="` + x.GetToken() + `">`)
 		// log.Debugf("Session ID: %s", sess.ID())
 		// log.Debugf("CSRF Token: %s", c.Data["CSRFToken"])
 

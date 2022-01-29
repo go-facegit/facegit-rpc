@@ -2,7 +2,7 @@ package app
 
 import (
 	// "fmt"
-	"net/http"
+	// "net/http"
 	"os"
 	"path/filepath"
 
@@ -10,17 +10,12 @@ import (
 
 	// "github.com/go-macaron/binding"
 	"github.com/go-macaron/cache"
-	"github.com/go-macaron/captcha"
 	"github.com/go-macaron/csrf"
 	"github.com/go-macaron/gzip"
-	"github.com/go-macaron/i18n"
 	"github.com/go-macaron/session"
 
 	"github.com/go-facegit/facegit-rpc/internal/app/context"
 	"github.com/go-facegit/facegit-rpc/internal/app/router"
-	"github.com/go-facegit/facegit-rpc/internal/app/template"
-	"github.com/go-facegit/facegit-rpc/internal/assets/public"
-	"github.com/go-facegit/facegit-rpc/internal/assets/templates"
 	"github.com/go-facegit/facegit-rpc/internal/conf"
 )
 
@@ -31,37 +26,6 @@ func newMacaron() *macaron.Macaron {
 	m.Use(macaron.Logger())
 	m.Use(macaron.Recovery())
 
-	m.Use(macaron.Static(
-		filepath.Join(conf.CustomDir(), "public"),
-		macaron.StaticOptions{
-			SkipLogging: true,
-		},
-	))
-
-	var publicFs http.FileSystem
-	if !conf.Web.LoadAssetsFromDisk {
-		publicFs = public.NewFileSystem()
-	}
-	m.Use(macaron.Static(
-		filepath.Join(conf.WorkDir(), "public"),
-		macaron.StaticOptions{
-			FileSystem:  publicFs,
-			SkipLogging: false,
-		},
-	))
-
-	//template start
-	renderOpt := macaron.RenderOptions{
-		Directory:         filepath.Join(conf.WorkDir(), "templates"),
-		AppendDirectories: []string{filepath.Join(conf.CustomDir(), "templates")},
-		Funcs:             template.FuncMap(),
-		IndentJSON:        macaron.Env != macaron.PROD,
-	}
-	if !conf.Web.LoadAssetsFromDisk {
-		renderOpt.TemplateFileSystem = templates.NewTemplateFileSystem("", renderOpt.AppendDirectories[0])
-	}
-
-	m.Use(macaron.Renderer(renderOpt))
 	//template end
 
 	localeNames, _ := conf.AssetDir("conf/locale")
@@ -69,23 +33,11 @@ func newMacaron() *macaron.Macaron {
 	for _, name := range localeNames {
 		localeFiles[name] = conf.MustAsset("conf/locale/" + name)
 	}
-	m.Use(i18n.I18n(i18n.Options{
-		CustomDirectory: filepath.Join(conf.CustomDir(), "conf", "locale"),
-		Files:           localeFiles,
-		Langs:           conf.I18n.Langs,
-		Names:           conf.I18n.Names,
-		DefaultLang:     "en-US",
-		Redirect:        true,
-	}))
 
 	m.Use(cache.Cacher(cache.Options{
 		Adapter:       conf.Cache.Adapter,
 		AdapterConfig: conf.Cache.Host,
 		Interval:      conf.Cache.Interval,
-	}))
-
-	m.Use(captcha.Captchaer(captcha.Options{
-		SubURL: conf.Web.Subpath,
 	}))
 
 	return m

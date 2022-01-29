@@ -1,8 +1,6 @@
 // Code generated for package conf by go-bindata DO NOT EDIT. (@generated)
 // sources:
 // ../../../conf/app.conf
-// ../../../conf/locale/locale_en-US.ini
-// ../../../conf/locale/locale_zh-CN.ini
 package conf
 
 import (
@@ -99,46 +97,6 @@ func confAppConf() (*asset, error) {
 	return a, nil
 }
 
-var _confLocaleLocale_enUsIni = "\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\x01\x00\x00\xff\xff\x00\x00\x00\x00\x00\x00\x00\x00"
-
-func confLocaleLocale_enUsIniBytes() ([]byte, error) {
-	return bindataRead(
-		_confLocaleLocale_enUsIni,
-		"conf/locale/locale_en-US.ini",
-	)
-}
-
-func confLocaleLocale_enUsIni() (*asset, error) {
-	bytes, err := confLocaleLocale_enUsIniBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "conf/locale/locale_en-US.ini", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _confLocaleLocale_zhCnIni = "\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\x01\x00\x00\xff\xff\x00\x00\x00\x00\x00\x00\x00\x00"
-
-func confLocaleLocale_zhCnIniBytes() ([]byte, error) {
-	return bindataRead(
-		_confLocaleLocale_zhCnIni,
-		"conf/locale/locale_zh-CN.ini",
-	)
-}
-
-func confLocaleLocale_zhCnIni() (*asset, error) {
-	bytes, err := confLocaleLocale_zhCnIniBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "conf/locale/locale_zh-CN.ini", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
 // Asset loads and returns the asset for the given name.
 // It returns an error if the asset could not be found or
 // could not be loaded.
@@ -191,9 +149,7 @@ func AssetNames() []string {
 
 // _bindata is a table, holding each asset generator, mapped to its name.
 var _bindata = map[string]func() (*asset, error){
-	"conf/app.conf":                confAppConf,
-	"conf/locale/locale_en-US.ini": confLocaleLocale_enUsIni,
-	"conf/locale/locale_zh-CN.ini": confLocaleLocale_zhCnIni,
+	"conf/app.conf": confAppConf,
 }
 
 // AssetDir returns the file names below a certain
@@ -239,10 +195,6 @@ type bintree struct {
 var _bintree = &bintree{nil, map[string]*bintree{
 	"conf": &bintree{nil, map[string]*bintree{
 		"app.conf": &bintree{confAppConf, map[string]*bintree{}},
-		"locale": &bintree{nil, map[string]*bintree{
-			"locale_en-US.ini": &bintree{confLocaleLocale_enUsIni, map[string]*bintree{}},
-			"locale_zh-CN.ini": &bintree{confLocaleLocale_zhCnIni, map[string]*bintree{}},
-		}},
 	}},
 }}
 
