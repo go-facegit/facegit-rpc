@@ -39,7 +39,7 @@ func autoMakeCustomConf(customConf string) error {
 	cfg.Section("database").Key("user").SetValue("root")
 	cfg.Section("database").Key("password").SetValue("root")
 
-	cfg.Section("web").Key("http_port").SetValue("8080")
+	cfg.Section("rpc").Key("http_port").SetValue("8080")
 
 	cfg.Section("session").Key("provider").SetValue("file")
 
