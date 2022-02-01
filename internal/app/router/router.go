@@ -10,7 +10,6 @@ import (
 	"gopkg.in/ini.v1"
 
 	"github.com/go-facegit/facegit-rpc/internal/conf"
-	"github.com/go-facegit/facegit-rpc/internal/db"
 	"github.com/go-facegit/facegit-rpc/internal/log"
 	"github.com/go-facegit/facegit-rpc/internal/tools"
 	"github.com/go-facegit/facegit-rpc/internal/tools/debug"
@@ -70,7 +69,6 @@ func Init(customConf string) error {
 
 	conf.Init(customConf)
 	log.Init()
-	db.Init()
 
 	if strings.EqualFold(conf.App.RunMode, "dev") {
 		go debug.Pprof()
