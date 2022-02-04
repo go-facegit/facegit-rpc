@@ -19,6 +19,6 @@ func Start(port int) {
 	rpc.Register(repoLib)
 	err := http.ListenAndServe(sPortStr, nil)
 	if err != nil {
-		fmt.Println("rpc listen err:%s", err.Error())
+		fmt.Println("rpc listen err: " + err.Error())
 	}
 }
