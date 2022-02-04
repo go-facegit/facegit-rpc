@@ -39,12 +39,12 @@ func autoMakeCustomConf(customConf string) error {
 	cfg.Section("").Key("run_mode").SetValue("prod")
 
 	cfg.Section("rpc").Key("http_port").SetValue("8080")
-
 	cfg.Section("session").Key("provider").SetValue("file")
 
 	repoPath := fmt.Sprintf("%s/data/repo", dir)
 	cfg.Section("repo").Key("root_path").SetValue(repoPath)
 
+	os.MkdirAll(repoPath, os.ModePerm)
 	os.MkdirAll(filepath.Dir(customConf), os.ModePerm)
 	if err := cfg.SaveTo(customConf); err != nil {
 		return err

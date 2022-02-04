@@ -21,10 +21,12 @@ func (rp *Repo) Create(args *RepoCreateArgs, reply *int) error {
 	fmt.Println("repo name", args.UserName, args.ProjectName)
 
 	rootPath := conf.Repo.RootPath
+	fmt.Println(rootPath)
 
 	if tools.IsExist(rootPath) {
 
 		repoPath := fmt.Sprintf("%s/%s/%s", rootPath, args.UserName, args.ProjectName)
+		fmt.Println(repoPath)
 
 		if err := git.Init(repoPath, git.InitOptions{Bare: true}); err != nil {
 			return fmt.Errorf("init repository: %v", err)

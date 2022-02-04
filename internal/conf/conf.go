@@ -1,14 +1,6 @@
 package conf
 
 import (
-	// "fmt"
-	// "log"
-	// "net/url"
-	// "os"
-	// "path/filepath"
-	// "strconv"
-	// "strings"
-
 	"github.com/pkg/errors"
 	"gopkg.in/ini.v1"
 
