@@ -10,14 +10,11 @@ import (
 
 func Start(port int) {
 
-	sPortStr := fmt.Sprintf(":%d", port)
-
 	rpc.HandleHTTP()
-
 	repoLib := new(lib.Repo)
-
 	rpc.Register(repoLib)
-	err := http.ListenAndServe(sPortStr, nil)
+
+	err := http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
 	if err != nil {
 		fmt.Println("rpc listen err: " + err.Error())
 	}

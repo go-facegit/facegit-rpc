@@ -2,6 +2,10 @@ package lib
 
 import (
 	"fmt"
+
+	"github.com/go-facegit/facegit-rpc/internal/conf"
+	"github.com/go-facegit/facegit-rpc/internal/tools"
+	"github.com/gogs/git-module"
 )
 
 type Repo struct {
@@ -9,11 +13,24 @@ type Repo struct {
 }
 
 type RepoCreateArgs struct {
-	A, B int
+	UserName    string
+	ProjectName string
 }
 
 func (rp *Repo) Create(args *RepoCreateArgs, reply *int) error {
-	fmt.Println("这个方法执行了啊---嘿嘿--- Multiply ")
+	fmt.Println("repo name", args.UserName, args.ProjectName)
+
+	rootPath := conf.Repo.RootPath
+
+	if tools.IsExist(rootPath) {
+
+		repoPath := fmt.Sprintf("%s/%s/%s", rootPath, args.UserName, args.ProjectName)
+
+		if err := git.Init(repoPath, git.InitOptions{Bare: true}); err != nil {
+			return fmt.Errorf("init repository: %v", err)
+		}
+	}
+
 	*reply = 1
 	return nil
 }

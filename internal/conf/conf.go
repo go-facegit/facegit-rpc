@@ -55,25 +55,18 @@ func Init(customConf string) error {
 		return errors.Wrap(err, "mapping [log] section")
 	}
 
-	// ***************************
-	// ----- Database settings -----
-	// ***************************
-	if err = File.Section("database").MapTo(&Database); err != nil {
-		return errors.Wrap(err, "mapping [log] section")
-	}
-
 	// ****************************
-	// ----- Web settings -----
+	// ----- RPC settings -----
 	// ****************************
 	if err = File.Section("rpc").MapTo(&Rpc); err != nil {
 		return errors.Wrap(err, "mapping [web] section")
 	}
 
 	// ****************************
-	// ----- Session settings -----
+	// ----- Repo settings -----
 	// ****************************
-	if err = File.Section("session").MapTo(&Session); err != nil {
-		return errors.Wrap(err, "mapping [session] section")
+	if err = File.Section("repo").MapTo(&Repo); err != nil {
+		return errors.Wrap(err, "mapping [repo] section")
 	}
 
 	if err = File.Section("cache").MapTo(&Cache); err != nil {

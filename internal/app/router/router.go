@@ -1,7 +1,7 @@
 package router
 
 import (
-	// "fmt"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -16,6 +16,11 @@ import (
 )
 
 func autoMakeCustomConf(customConf string) error {
+
+	dir, err := os.Getwd()
+	if err != nil {
+		return err
+	}
 
 	if tools.IsExist(customConf) {
 		return nil
@@ -33,14 +38,12 @@ func autoMakeCustomConf(customConf string) error {
 	cfg.Section("").Key("app_name").SetValue("facegit-rpc")
 	cfg.Section("").Key("run_mode").SetValue("prod")
 
-	cfg.Section("database").Key("host").SetValue("127.0.0.1:3306")
-	cfg.Section("database").Key("name").SetValue("facegit")
-	cfg.Section("database").Key("user").SetValue("root")
-	cfg.Section("database").Key("password").SetValue("root")
-
 	cfg.Section("rpc").Key("http_port").SetValue("8080")
 
 	cfg.Section("session").Key("provider").SetValue("file")
+
+	repoPath := fmt.Sprintf("%s/data/repo", dir)
+	cfg.Section("repo").Key("root_path").SetValue(repoPath)
 
 	os.MkdirAll(filepath.Dir(customConf), os.ModePerm)
 	if err := cfg.SaveTo(customConf); err != nil {

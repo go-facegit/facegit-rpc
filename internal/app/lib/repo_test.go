@@ -31,7 +31,8 @@ func getClient() (*rpc.Client, error) {
 }
 
 type ArgsTwo struct {
-	A, B int
+	UserName    string
+	ProjectName string
 }
 
 func TestRepoCreate(t *testing.T) {
@@ -41,7 +42,7 @@ func TestRepoCreate(t *testing.T) {
 		t.Errorf("TestRepoCreate %s", err)
 	}
 
-	args := ArgsTwo{1, 2}
+	args := ArgsTwo{"midoks", "facegit"}
 	var reply int
 	err = client.Call("Repo.Create", args, &reply)
 	if err != nil {
