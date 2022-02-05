@@ -17,22 +17,17 @@ type RepoCreateArgs struct {
 	ProjectName string
 }
 
-func (rp *Repo) Create(args *RepoCreateArgs, reply *int) error {
-	fmt.Println("repo name", args.UserName, args.ProjectName)
+func (rp *Repo) Create(args *RepoCreateArgs, reply *bool) error {
 
 	rootPath := conf.Repo.RootPath
-	fmt.Println(rootPath)
-
 	if tools.IsExist(rootPath) {
 
-		repoPath := fmt.Sprintf("%s/%s/%s", rootPath, args.UserName, args.ProjectName)
-		fmt.Println(repoPath)
-
+		repoPath := fmt.Sprintf("%s/%s/%s.git", rootPath, args.UserName, args.ProjectName)
 		if err := git.Init(repoPath, git.InitOptions{Bare: true}); err != nil {
 			return fmt.Errorf("init repository: %v", err)
 		}
 	}
 
-	*reply = 1
+	*reply = true
 	return nil
 }

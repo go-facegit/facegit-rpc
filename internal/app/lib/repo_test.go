@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"net/rpc"
 	"testing"
+
+	"github.com/go-facegit/facegit-rpc/internal/app/router"
 )
 
 var testPort = ":8068"
@@ -22,6 +24,9 @@ func localServer() {
 }
 
 func init() {
+	// go localServer()
+
+	router.Init("")
 	go localServer()
 }
 
@@ -37,11 +42,13 @@ func TestRepoCreate(t *testing.T) {
 		t.Errorf("TestRepoCreate %s", err)
 	}
 
-	args := RepoCreateArgs{"midoks", "facegit"}
-	var reply int
-	err = client.Call("Repo.Create", args, &reply)
+	var reply bool
+	err = client.Call("Repo.Create", RepoCreateArgs{"midoks", "facegit"}, &reply)
+
+	fmt.Println("ret", reply, err)
 	if err != nil {
 		t.Errorf("TestRepoCreate %s", err)
+		return
 	}
 	t.Log("TestRepoCreate ok")
 }
