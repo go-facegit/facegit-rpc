@@ -3,7 +3,7 @@ package lib
 import (
 	"fmt"
 	"os"
-	// "time"
+	"time"
 
 	"github.com/go-facegit/facegit-rpc/internal/conf"
 	"github.com/go-facegit/facegit-rpc/internal/tools"
@@ -11,6 +11,9 @@ import (
 )
 
 type Repo struct {
+	Commit  *git.Commit
+	Tag     *git.Tag
+	GitRepo *git.Repository
 }
 
 type RepoCreateArgs struct {
@@ -19,7 +22,7 @@ type RepoCreateArgs struct {
 }
 
 //Init Git Repo Project
-func (rp *Repo) Create(args *RepoCreateArgs, reply *bool) error {
+func (repo *Repo) Create(args *RepoCreateArgs, reply *bool) error {
 	*reply = false
 	rootPath := conf.Repo.RootPath
 	repoPath := fmt.Sprintf("%s/%s/%s.git", rootPath, args.UserOrOrg, args.ProjectName)
@@ -32,14 +35,59 @@ func (rp *Repo) Create(args *RepoCreateArgs, reply *bool) error {
 	return nil
 }
 
-func (rp *Repo) Delete(args *RepoCreateArgs, reply *bool) error {
+func (repo *Repo) Delete(args *RepoCreateArgs, reply *bool) error {
 	*reply = false
 	rootPath := conf.Repo.RootPath
 	repoPath := fmt.Sprintf("%s/%s/%s.git", rootPath, args.UserOrOrg, args.ProjectName)
 	if err := os.RemoveAll(repoPath); err != nil {
 		desc := fmt.Sprintf("[%s]: %v", repoPath, err)
-		return fmt.Errorf("delete repository: %s", desc)
+		return fmt.Errorf("delete repository error: %s", desc)
 	}
 	*reply = true
+	return nil
+}
+
+func (repo *Repo) List(args *RepoCreateArgs, reply *bool) error {
+	*reply = false
+	var err error
+
+	rootPath := conf.Repo.RootPath
+	projPath := fmt.Sprintf("%s/%s", args.UserOrOrg, args.ProjectName)
+
+	repoPath := fmt.Sprintf("%s/%s.git", rootPath, projPath)
+
+	repo.GitRepo, err = git.Open(repoPath)
+	if err != nil {
+		return fmt.Errorf("repository[%s] error: %s", projPath, err)
+	}
+
+	repo.Commit, err = repo.GitRepo.BranchCommit("master")
+	if err != nil {
+		return fmt.Errorf("repository[%s] commit error: %s", projPath, err)
+	}
+
+	tree, err := repo.Commit.Subtree("")
+	if err != nil {
+		return fmt.Errorf("repository[%s] subtree error: %s", projPath, err)
+	}
+
+	entries, err := tree.Entries()
+	if err != nil {
+		return fmt.Errorf("%s: list entries", err)
+	}
+	entries.Sort()
+
+	f, err := entries.CommitsInfo(repo.Commit, git.CommitsInfoOptions{
+		Path:           "",
+		MaxConcurrency: 5,
+		Timeout:        5 * time.Minute,
+	})
+
+	for k, v := range f {
+		fmt.Println(k, v.Entry.Name(), v.Entry.ID(), v.Entry.Type())
+	}
+
+	fmt.Println("subtree error:", f, err)
+
 	return nil
 }
