@@ -19,6 +19,7 @@ type Repo struct {
 type RepoCreateArgs struct {
 	UserOrOrg   string
 	ProjectName string
+	TreePath    string
 }
 
 //Init Git Repo Project
@@ -35,6 +36,7 @@ func (repo *Repo) Create(args *RepoCreateArgs, reply *bool) error {
 	return nil
 }
 
+// Delete Repo
 func (repo *Repo) Delete(args *RepoCreateArgs, reply *bool) error {
 	*reply = false
 	rootPath := conf.Repo.RootPath
@@ -47,6 +49,7 @@ func (repo *Repo) Delete(args *RepoCreateArgs, reply *bool) error {
 	return nil
 }
 
+// Repo List Rpc
 func (repo *Repo) List(args *RepoCreateArgs, reply *bool) error {
 	*reply = false
 	var err error
@@ -66,7 +69,7 @@ func (repo *Repo) List(args *RepoCreateArgs, reply *bool) error {
 		return fmt.Errorf("repository[%s] commit error: %s", projPath, err)
 	}
 
-	tree, err := repo.Commit.Subtree("")
+	tree, err := repo.Commit.Subtree(args.TreePath)
 	if err != nil {
 		return fmt.Errorf("repository[%s] subtree error: %s", projPath, err)
 	}
@@ -78,7 +81,7 @@ func (repo *Repo) List(args *RepoCreateArgs, reply *bool) error {
 	entries.Sort()
 
 	f, err := entries.CommitsInfo(repo.Commit, git.CommitsInfoOptions{
-		Path:           "",
+		Path:           args.TreePath,
 		MaxConcurrency: 5,
 		Timeout:        5 * time.Minute,
 	})
