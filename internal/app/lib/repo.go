@@ -69,6 +69,11 @@ func (repo *Repo) List(args *RepoCreateArgs, reply *bool) error {
 		return fmt.Errorf("repository[%s] commit error: %s", projPath, err)
 	}
 
+	entry, err := repo.Commit.TreeEntry(args.TreePath)
+	if err != nil {
+		return fmt.Errorf("repository[%s] get tree entry error: %s", projPath, err)
+	}
+
 	tree, err := repo.Commit.Subtree(args.TreePath)
 	if err != nil {
 		return fmt.Errorf("repository[%s] subtree error: %s", projPath, err)
@@ -86,10 +91,13 @@ func (repo *Repo) List(args *RepoCreateArgs, reply *bool) error {
 		Timeout:        5 * time.Minute,
 	})
 
+	// latestCommit := repo.Commit
+
 	for k, v := range f {
-		fmt.Println(k, v.Entry.Name(), v.Entry.ID(), v.Entry.Type())
+		fmt.Println(k, v.Entry.Name(), v.Commit.ID, v.Entry.Type())
 	}
 
+	fmt.Println("entry tree:", entry.Name(), entry.ID(), entry.Type())
 	fmt.Println("subtree error:", f, err)
 
 	return nil

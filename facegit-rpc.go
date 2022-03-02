@@ -28,5 +28,6 @@ func main() {
 		log.Infof("Failed to start application: %v", err)
 	}
 
-	cmd.RpcRunDebug()
+	// handle to debug
+	// cmd.RpcRunDebug()
 }

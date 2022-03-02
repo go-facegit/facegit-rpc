@@ -8,7 +8,6 @@ dirfilter:
 - vendor
 - logs
 - assets
-- templates
 ext:
 - go
 enablerun: true
@@ -17,5 +16,5 @@ action:
   - find . -name ".DS_Store" -print -delete
   - go generate internal/assets/conf/conf.go
   after:
-  - echo "zzz end"
+  - ps -ef|grep 'facegit-rpc run'| grep -v grep | awk '{print $2}' | xargs kill -9  && ./facegit-rpc run &
 link: https://github.com/midoks/zzz
