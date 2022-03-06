@@ -1,4 +1,4 @@
-package lib
+package repo
 
 import (
 	"fmt"
@@ -23,20 +23,14 @@ type RepoCreateArgs struct {
 }
 
 type RepoBaseInfo struct {
-	UserOrOrg   string
-	ProjectName string
-	TreePath    string
+	Id     string
+	UpTime string
+	Info   int
 }
 
-type RepoBaseList struct {
-	UserOrOrg   string
-	ProjectName string
-	TreePath    string
-}
-
-type RepoList struct {
+type RepoRetList struct {
 	Info RepoBaseInfo
-	List RepoBaseList
+	// List []git.EntryCommitInfo
 }
 
 //Init Git Repo Project
@@ -67,8 +61,8 @@ func (repo *Repo) Delete(args *RepoCreateArgs, reply *bool) error {
 }
 
 // Repo List Rpc
-func (repo *Repo) List(args *RepoCreateArgs, reply *bool) error {
-	*reply = false
+func (repo *Repo) List(args *RepoCreateArgs, reply *RepoRetList) error {
+
 	var err error
 
 	rootPath := conf.Repo.RootPath
@@ -116,12 +110,25 @@ func (repo *Repo) List(args *RepoCreateArgs, reply *bool) error {
 		}
 	}
 
-	fmt.Println(latestCommit.ID.String())
+	id := fmt.Sprintf("%s", latestCommit.ID)
+
+	fmt.Println("id:", id)
+	info := RepoBaseInfo{
+		Id:   "mmmm",
+		Info: 2,
+	}
+
+	reply = &RepoRetList{
+		Info: info,
+		// List: f,
+	}
+	// fmt.Println(reply)
 
 	for k, v := range f {
 		fmt.Println(k, v.Entry.Name(), v.Commit.ID, v.Entry.Type())
 	}
 
+	fmt.Println(latestCommit.ID.String)
 	fmt.Println("entry tree:", entry.Name(), entry.ID(), entry.Type())
 	fmt.Println("subtree error:", f, err)
 

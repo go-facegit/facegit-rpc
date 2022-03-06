@@ -1,4 +1,4 @@
-package lib
+package repo
 
 import (
 	"fmt"
@@ -6,6 +6,7 @@ import (
 	"net/rpc"
 	"testing"
 
+	"github.com/go-facegit/facegit-rpc/internal/app/repo/pb"
 	"github.com/go-facegit/facegit-rpc/internal/app/router"
 )
 
