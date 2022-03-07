@@ -34,30 +34,26 @@ type RepoRetList struct {
 }
 
 //Init Git Repo Project
-func (repo *Repo) Create(args *RepoCreateArgs, reply *bool) error {
-	*reply = false
+func RepoCreate(UserOrOrg, ProjectName string) (bool, error) {
 	rootPath := conf.Repo.RootPath
-	repoPath := fmt.Sprintf("%s/%s/%s.git", rootPath, args.UserOrOrg, args.ProjectName)
+	repoPath := fmt.Sprintf("%s/%s/%s.git", rootPath, UserOrOrg, ProjectName)
 	if !tools.IsExist(repoPath) {
 		if err := git.Init(repoPath, git.InitOptions{Bare: true}); err != nil {
-			return fmt.Errorf("init repository: %v", err)
+			return false, fmt.Errorf("init repository: %v", err)
 		}
-		*reply = true
 	}
-	return nil
+	return true, nil
 }
 
 // Delete Repo
-func (repo *Repo) Delete(args *RepoCreateArgs, reply *bool) error {
-	*reply = false
+func RepoDelete(UserOrOrg, ProjectName string) (bool, error) {
 	rootPath := conf.Repo.RootPath
-	repoPath := fmt.Sprintf("%s/%s/%s.git", rootPath, args.UserOrOrg, args.ProjectName)
+	repoPath := fmt.Sprintf("%s/%s/%s.git", rootPath, UserOrOrg, ProjectName)
 	if err := os.RemoveAll(repoPath); err != nil {
 		desc := fmt.Sprintf("[%s]: %v", repoPath, err)
-		return fmt.Errorf("delete repository error: %s", desc)
+		return false, fmt.Errorf("delete repository error: %s", desc)
 	}
-	*reply = true
-	return nil
+	return true, nil
 }
 
 // Repo List Rpc

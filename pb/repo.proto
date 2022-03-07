@@ -12,7 +12,6 @@ message Message{
 message ReqBase{
   string UserOrOrg  = 1;
   string ProjectName = 2;
-  string TreePath = 3;
 }
 
 message ReqList{
@@ -22,12 +21,14 @@ message ReqList{
 }
 
 message RespBool{
-  bool body = 1;
+  bool TrueOrFalse = 1;
 }
 
 // func
 service RepoService{
   rpc S(Message) returns (Message){}
+
+  rpc Create(ReqBase) returns (RespBool){}
   rpc List(ReqList) returns (Message){}
 }
 
