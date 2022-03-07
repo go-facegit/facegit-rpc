@@ -3,7 +3,7 @@ package repo
 import (
 	// "log"
 
-	"github.com/go-facegit/facegit-rpc/internal/app/repo/pb"
+	"github.com/go-facegit/facegit-rpc/pb"
 	"golang.org/x/net/context"
 )
 

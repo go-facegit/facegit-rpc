@@ -16,7 +16,7 @@ action:
   before:
   - find . -name ".DS_Store" -print -delete
   - go generate internal/assets/conf/conf.go
-  - protoc --go_out=plugins=grpc:./internal/app/repo/pb ./internal/app/repo/pb/repo.proto
+  - protoc --go_out=plugins=grpc:./pb ./pb/repo.proto
   after:
   - ps -ef|grep 'facegit-rpc run'| grep -v grep | awk '{print $2}' | xargs kill -9  && ./facegit-rpc run &
 link: https://github.com/midoks/zzz

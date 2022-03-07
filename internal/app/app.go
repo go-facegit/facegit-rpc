@@ -7,7 +7,7 @@ import (
 	// "net/rpc"
 
 	"github.com/go-facegit/facegit-rpc/internal/app/repo"
-	"github.com/go-facegit/facegit-rpc/internal/app/repo/pb"
+	"github.com/go-facegit/facegit-rpc/pb"
 
 	"google.golang.org/grpc"
 )
