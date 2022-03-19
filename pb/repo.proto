@@ -24,11 +24,21 @@ message RespBool{
   bool TrueOrFalse = 1;
 }
 
+message RespStructList{
+  string Name = 1;
+}
+
+message RespList{
+  bool TrueOrFalse = 1;
+  repeated RespStructList List = 2;
+}
+
+
 // func
 service RepoService{
-  rpc S(Message) returns (Message){}
-
   rpc Create(ReqBase) returns (RespBool){}
+  rpc Delete(ReqBase) returns (RespBool){}
+
   rpc List(ReqList) returns (Message){}
 }
 
