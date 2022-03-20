@@ -23,7 +23,7 @@ func (s *Server) Create(ctx context.Context, message *pb.ReqBase) (*pb.RespBool,
 
 func (s *Server) List(ctx context.Context, message *pb.ReqList) (*pb.Message, error) {
 
-	b, err := RepoList(message.UserOrOrg, message.ProjectName, message.TreePath)
-	fmt.Println(b, err)
+	b, err, ee := RepoList(message.UserOrOrg, message.ProjectName, message.TreePath)
+	fmt.Println(b, err, ee)
 	return &pb.Message{Body: "hh"}, nil
 }

@@ -30,7 +30,7 @@ type RepoBaseInfo struct {
 
 type RepoRetList struct {
 	Info RepoBaseInfo
-	// List []git.EntryCommitInfo
+	List []*git.EntryCommitInfo
 }
 
 //Init Git Repo Project
@@ -56,41 +56,42 @@ func RepoDelete(UserOrOrg, ProjectName string) (bool, error) {
 	return true, nil
 }
 
-func RepoList(UserOrOrg, ProjectName, TreePath string) (bool, error) {
+func RepoList(UserOrOrg, ProjectName, TreePath string) (bool, error, RepoRetList) {
 
 	var err error
 	repo := Repo{}
+	repoList := RepoRetList{}
 	rootPath := conf.Repo.RootPath
 	projPath := fmt.Sprintf("%s/%s", UserOrOrg, ProjectName)
 	repoPath := fmt.Sprintf("%s/%s.git", rootPath, projPath)
 
 	repo.GitRepo, err = git.Open(repoPath)
 	if err != nil {
-		return false, fmt.Errorf("repository[%s] error: %s", projPath, err)
+		return false, fmt.Errorf("repository[%s] error: %s", projPath, err), repoList
 	}
 
 	repo.Commit, err = repo.GitRepo.BranchCommit("master")
 	if err != nil {
-		return false, fmt.Errorf("repository[%s] commit error: %s", projPath, err)
+		return false, fmt.Errorf("repository[%s] commit error: %s", projPath, err), repoList
 	}
 
 	entry, err := repo.Commit.TreeEntry(TreePath)
 	if err != nil {
-		return false, fmt.Errorf("repository[%s] get tree entry error: %s", projPath, err)
+		return false, fmt.Errorf("repository[%s] get tree entry error: %s", projPath, err), repoList
 	}
 
 	tree, err := repo.Commit.Subtree(TreePath)
 	if err != nil {
-		return false, fmt.Errorf("repository[%s] subtree error: %s", projPath, err)
+		return false, fmt.Errorf("repository[%s] subtree error: %s", projPath, err), repoList
 	}
 
 	entries, err := tree.Entries()
 	if err != nil {
-		return false, fmt.Errorf("%s: list entries", err)
+		return false, fmt.Errorf("%s: list entries", err), repoList
 	}
 	entries.Sort()
 
-	f, err := entries.CommitsInfo(repo.Commit, git.CommitsInfoOptions{
+	fList, err := entries.CommitsInfo(repo.Commit, git.CommitsInfoOptions{
 		Path:           TreePath,
 		MaxConcurrency: 5,
 		Timeout:        5 * time.Minute,
@@ -100,30 +101,32 @@ func RepoList(UserOrOrg, ProjectName, TreePath string) (bool, error) {
 	if len(TreePath) > 0 {
 		latestCommit, err = repo.Commit.CommitByPath(git.CommitByRevisionOptions{Path: TreePath})
 		if err != nil {
-			return false, fmt.Errorf("get commit by path: %s", err)
+			return false, fmt.Errorf("get commit by path: %s", err), repoList
 		}
 	}
 
 	id := fmt.Sprintf("%s", latestCommit.ID)
 
 	fmt.Println("id:", id)
+
+	entryId := fmt.Sprintf("%s", entry.ID())
 	info := RepoBaseInfo{
-		Id:   "mmmm",
+		Id:   entryId,
 		Info: 2,
 	}
 
-	reply := &RepoRetList{
+	repoList = RepoRetList{
 		Info: info,
-		// List: f,
+		List: fList,
 	}
-	fmt.Println(reply)
+	fmt.Println(repoList)
 
-	for k, v := range f {
+	for k, v := range fList {
 		fmt.Println(k, v.Entry.Name(), v.Commit.ID, v.Entry.Type())
 	}
 
 	fmt.Println(latestCommit.ID.String)
 	fmt.Println("entry tree:", entry.Name(), entry.ID(), entry.Type())
-	fmt.Println("subtree error:", f, err)
-	return true, nil
+	fmt.Println("subtree error:", fList, err)
+	return true, nil, repoList
 }
