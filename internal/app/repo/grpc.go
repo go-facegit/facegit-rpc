@@ -31,11 +31,12 @@ func (s *Server) List(ctx context.Context, message *pb.ReqList) (*pb.RespList, e
 	list := data.List
 	var retList []*pb.RespStructList
 	for _, v := range list {
-		// fmt.Println("dlist:", k, v.Entry.Name(), v.Commit.ID, v.Entry.Type())
+
 		t := &pb.RespStructList{
 			Name:     v.Entry.Name(),
 			CommitId: fmt.Sprintf("%s", v.Commit.ID),
 			Type:     fmt.Sprintf("%s", v.Entry.Type()),
+			When:     v.Commit.Committer.When.String(),
 		}
 
 		retList = append(retList, t)
@@ -46,6 +47,7 @@ func (s *Server) List(ctx context.Context, message *pb.ReqList) (*pb.RespList, e
 			Message:    data.Newest.Message,
 			Id:         data.Newest.Id,
 			AuthorName: data.Newest.AuthorName,
+			When:       data.Newest.When.String(),
 		},
 		List: retList,
 	}, nil
