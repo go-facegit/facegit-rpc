@@ -26,10 +26,19 @@ message RespBool{
 
 message RespStructList{
   string Name = 1;
+  string CommitId = 2;
+  string Type = 3;
+
+}
+
+message RespStructNewest{
+  string Message = 1;
+  string Id = 2;
+  string AuthorName = 3;
 }
 
 message RespList{
-  bool TrueOrFalse = 1;
+  RespStructNewest Newest = 1;
   repeated RespStructList List = 2;
 }
 
@@ -39,7 +48,7 @@ service RepoService{
   rpc Create(ReqBase) returns (RespBool){}
   rpc Delete(ReqBase) returns (RespBool){}
 
-  rpc List(ReqList) returns (Message){}
+  rpc List(ReqList) returns (RespList){}
 }
 
 
