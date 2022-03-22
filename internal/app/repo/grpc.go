@@ -11,13 +11,13 @@ import (
 type Server struct {
 }
 
-func (s *Server) Delete(ctx context.Context, message *pb.ReqBase) (*pb.RespBool, error) {
-	tof, err := RepoDelete(message.UserOrOrg, message.ProjectName)
+func (s *Server) Create(ctx context.Context, message *pb.ReqBase) (*pb.RespBool, error) {
+	tof, err := RepoCreate(message.UserOrOrg, message.ProjectName)
 	return &pb.RespBool{TrueOrFalse: tof}, err
 }
 
-func (s *Server) Create(ctx context.Context, message *pb.ReqBase) (*pb.RespBool, error) {
-	tof, err := RepoCreate(message.UserOrOrg, message.ProjectName)
+func (s *Server) Delete(ctx context.Context, message *pb.ReqBase) (*pb.RespBool, error) {
+	tof, err := RepoDelete(message.UserOrOrg, message.ProjectName)
 	return &pb.RespBool{TrueOrFalse: tof}, err
 }
 
