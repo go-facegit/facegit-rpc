@@ -128,6 +128,6 @@ func RepoList(UserOrOrg, ProjectName, TreePath string) (error, RepoRetList) {
 	return nil, repoList
 }
 
-func RepoEditor(UserOrOrg, ProjectName, opts *pb.ReqUpdateOptions) {
+func RepoEditor(UserOrOrg, ProjectName string, opts *pb.ReqUpdateOptions) {
 
 }

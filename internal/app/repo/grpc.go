@@ -52,3 +52,9 @@ func (s *Server) List(ctx context.Context, message *pb.ReqList) (*pb.RespList, e
 		List: retList,
 	}, nil
 }
+
+func (s *Server) Editor(ctx context.Context, opts *pb.ReqUpdateOptions) (*pb.RespBool, error) {
+	RepoEditor(opts.UserOrOrg, opts.ProjectName, opts)
+
+	return &pb.RespBool{TrueOrFalse: true}, nil
+}

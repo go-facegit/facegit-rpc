@@ -29,6 +29,9 @@ message ReqUpdateOptions {
   string Message  = 6;    
   string Content   = 7;   
   bool IsNewFile   = 8;
+
+  string UserOrOrg  = 9;
+  string ProjectName = 10;
 }
 
 message RespBool{
@@ -61,6 +64,7 @@ service RepoService{
   rpc Delete(ReqBase) returns (RespBool){}
 
   rpc List(ReqList) returns (RespList){}
+  rpc Editor(ReqUpdateOptions) returns (RespBool){}
 }
 
 
