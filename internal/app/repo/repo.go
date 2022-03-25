@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-facegit/facegit-rpc/internal/conf"
 	"github.com/go-facegit/facegit-rpc/internal/tools"
+	"github.com/go-facegit/facegit-rpc/pb"
 	"github.com/gogs/git-module"
 )
 
@@ -125,4 +126,8 @@ func RepoList(UserOrOrg, ProjectName, TreePath string) (error, RepoRetList) {
 	}
 
 	return nil, repoList
+}
+
+func RepoEditor(UserOrOrg, ProjectName, opts *pb.ReqUpdateOptions) {
+
 }

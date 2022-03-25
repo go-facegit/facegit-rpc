@@ -20,6 +20,17 @@ message ReqList{
   string TreePath = 3;
 }
 
+message ReqUpdateOptions {
+  string LastCommitID  = 1;
+  string OldBranch   = 2; 
+  string NewBranch   = 3;
+  string OldTreeName  = 4;
+  string NewTreeName  = 5;
+  string Message  = 6;    
+  string Content   = 7;   
+  bool IsNewFile   = 8;
+}
+
 message RespBool{
   bool TrueOrFalse = 1;
 }
