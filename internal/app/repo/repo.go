@@ -75,6 +75,75 @@ func ComposeHookEnvs(opts ComposeHookEnvsOptions) []string {
 	return envs
 }
 
+// discardLocalRepoBranchChanges discards local commits/changes of
+// given branch to make sure it is even to remote branch.
+func discardLocalRepoBranchChanges(localPath, branch string) error {
+	if !tools.IsExist(localPath) {
+		return nil
+	}
+
+	// No need to check if nothing in the repository.
+	if !git.RepoHasBranch(localPath, branch) {
+		return nil
+	}
+
+	rev := "origin/" + branch
+	if err := git.RepoReset(localPath, rev, git.ResetOptions{Hard: true}); err != nil {
+		return fmt.Errorf("reset [revision: %s]: %v", rev, err)
+	}
+	return nil
+}
+
+// UpdateLocalCopy fetches latest changes of given branch from repoPath to localPath.
+// It creates a new clone if local copy does not exist, but does not checks out to a
+// specific branch if the local copy belongs to a wiki.
+// For existing local copy, it checks out to target branch by default, and safe to
+// assume subsequent operations are against target branch when caller has confidence
+// about no race condition.
+func UpdateLocalCopyBranch(repoPath, localPath, branch string, isWiki bool) (err error) {
+	if !tools.IsExist(localPath) {
+		// Checkout to a specific branch fails when wiki is an empty repository.
+		if isWiki {
+			branch = ""
+		}
+		if err = git.Clone(repoPath, localPath, git.CloneOptions{
+			Branch:  branch,
+			Timeout: time.Duration(300) * time.Second,
+		}); err != nil {
+			return fmt.Errorf("git clone [branch: %s]: %v", branch, err)
+		}
+		return nil
+	}
+	fmt.Println("gitRepo:", localPath)
+	gitRepo, err := git.Open(localPath)
+	if err != nil {
+		return fmt.Errorf("open repository: %v", err)
+	}
+
+	if err = gitRepo.Fetch(git.FetchOptions{
+		Prune: true,
+	}); err != nil {
+		return fmt.Errorf("fetch: %v", err)
+	}
+
+	if err = gitRepo.Checkout(branch); err != nil {
+		return fmt.Errorf("checkout [branch: %s]: %v", branch, err)
+	}
+
+	// Reset to align with remote in case of force push.
+	rev := "origin/" + branch
+	if err = gitRepo.Reset(rev, git.ResetOptions{
+		Hard: true,
+	}); err != nil {
+		return fmt.Errorf("reset [revision: %s]: %v", rev, err)
+	}
+	return nil
+}
+
+/////////////////////
+/// REPO OP --------]
+/////////////////////
+
 //Init Git Repo Project
 func RepoCreate(UserOrOrg, ProjectName string) (bool, error) {
 	rootPath := conf.Repo.RootPath
@@ -167,22 +236,12 @@ func RepoList(UserOrOrg, ProjectName, TreePath string) (error, RepoRetList) {
 	return nil, repoList
 }
 
-func RepoEditor(UserOrOrg, ProjectName string, opts *pb.ReqUpdateOptions) error {
+func RepoEditorFile(UserOrOrg, ProjectName string, opts *pb.ReqUpdateOptions) error {
 	var err error
-	repo := Repo{}
+
 	rootPath := conf.Repo.RootPath
 	projPath := fmt.Sprintf("%s/%s", UserOrOrg, ProjectName)
 	repoPath := fmt.Sprintf("%s/%s.git", rootPath, projPath)
-
-	repo.GitRepo, err = git.Open(repoPath)
-	if err != nil {
-		return fmt.Errorf("repository[%s] error: %s", projPath, err)
-	}
-
-	repo.Commit, err = repo.GitRepo.BranchCommit("master")
-	if err != nil {
-		return fmt.Errorf("repository[%s] commit error: %s", projPath, err)
-	}
 
 	tmpPath := path.Join(path.Dir(rootPath), "tmp")
 	uPath := path.Join(tmpPath, UserOrOrg)
@@ -190,7 +249,12 @@ func RepoEditor(UserOrOrg, ProjectName string, opts *pb.ReqUpdateOptions) error 
 	oldFilePath := path.Join(uPath, opts.OldTreeName)
 	filePath := path.Join(uPath, opts.NewTreeName)
 
-	fmt.Println("RepoEditor:", filePath)
+	if err = discardLocalRepoBranchChanges(uPath, opts.OldBranch); err != nil {
+		return fmt.Errorf("discard local repo branch[%s] changes: %v", opts.OldBranch, err)
+	} else if err = UpdateLocalCopyBranch(repoPath, uPath, opts.OldBranch, false); err != nil {
+		return fmt.Errorf("update local copy branch[%s]: %v", opts.OldBranch, err)
+	}
+
 	if err := os.MkdirAll(path.Dir(filePath), os.ModePerm); err != nil {
 		return err
 	}
@@ -233,13 +297,13 @@ func RepoEditor(UserOrOrg, ProjectName string, opts *pb.ReqUpdateOptions) error 
 		RepoPath: repoPath,
 	})
 
-	fmt.Println("envs:", envs)
+	// fmt.Println("envs:", envs)
 
 	if err := git.RepoPush(uPath, "origin", opts.NewBranch, git.PushOptions{Envs: envs}); err != nil {
 		return fmt.Errorf("git push origin %s: %v", opts.NewBranch, err)
 	}
 
-	fmt.Println("RepoEditor:", err)
+	// fmt.Println("RepoEditor:", err)
 
 	return nil
 }
