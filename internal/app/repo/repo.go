@@ -185,5 +185,7 @@ func RepoEditor(UserOrOrg, ProjectName string, opts *pb.ReqUpdateOptions) error 
 		return fmt.Errorf("git push origin %s: %v", opts.NewBranch, err)
 	}
 
+	fmt.Println("RepoEditor:", err)
+
 	return nil
 }
