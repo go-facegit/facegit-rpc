@@ -2,7 +2,10 @@ package repo
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
+	"path"
+	// "path/filepath"
 	"time"
 
 	"github.com/go-facegit/facegit-rpc/internal/conf"
@@ -121,13 +124,62 @@ func RepoList(UserOrOrg, ProjectName, TreePath string) (error, RepoRetList) {
 		List:   fList,
 	}
 
-	for k, v := range fList {
-		fmt.Println(k, v.Entry.Name(), v.Commit.ID, v.Entry.Type())
-	}
+	// for k, v := range fList {
+	// 	fmt.Println(k, v.Entry.Name(), v.Commit.ID, v.Entry.Type())
+	// }
 
 	return nil, repoList
 }
 
-func RepoEditor(UserOrOrg, ProjectName string, opts *pb.ReqUpdateOptions) {
+func RepoEditor(UserOrOrg, ProjectName string, opts *pb.ReqUpdateOptions) error {
+	var err error
+	repo := Repo{}
+	rootPath := conf.Repo.RootPath
+	projPath := fmt.Sprintf("%s/%s", UserOrOrg, ProjectName)
+	repoPath := fmt.Sprintf("%s/%s.git", rootPath, projPath)
 
+	repo.GitRepo, err = git.Open(repoPath)
+	if err != nil {
+		return fmt.Errorf("repository[%s] error: %s", projPath, err)
+	}
+
+	repo.Commit, err = repo.GitRepo.BranchCommit("master")
+	if err != nil {
+		return fmt.Errorf("repository[%s] commit error: %s", projPath, err)
+	}
+
+	tmpPath := path.Join(path.Dir(rootPath), "tmp")
+	uPath := path.Join(tmpPath, UserOrOrg)
+
+	filePath := path.Join(uPath, opts.NewTreeName)
+
+	fmt.Println("RepoEditor:", filePath)
+	if err := os.MkdirAll(path.Dir(filePath), os.ModePerm); err != nil {
+		return err
+	}
+
+	// If it's meant to be a new file, make sure it doesn't exist.
+	if opts.IsNewFile {
+		if tools.IsExist(filePath) {
+			return fmt.Errorf("File Already Exist[%s]!", filePath)
+		}
+	}
+
+	if err := ioutil.WriteFile(filePath, []byte(opts.Content), 0666); err != nil {
+		return fmt.Errorf("write file: %v", err)
+	}
+
+	gitSig := &git.Signature{
+		Name:  UserOrOrg,
+		Email: "midoks@163.com",
+		When:  time.Now(),
+	}
+
+	if err := git.RepoAdd(uPath, git.AddOptions{All: true}); err != nil {
+		return fmt.Errorf("git add --all: %v", err)
+	} else if err := git.RepoCommit(uPath, gitSig, opts.Message); err != nil {
+		return fmt.Errorf("commit changes on %q: %v", uPath, err)
+	}
+
+	return nil
 }
