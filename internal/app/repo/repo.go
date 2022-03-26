@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/go-facegit/facegit-rpc/internal/conf"
+	"github.com/go-facegit/facegit-rpc/internal/cryptoutil"
 	"github.com/go-facegit/facegit-rpc/internal/tools"
 	"github.com/go-facegit/facegit-rpc/pb"
 	"github.com/gogs/git-module"
@@ -66,7 +67,7 @@ func ComposeHookEnvs(opts ComposeHookEnvsOptions) []string {
 		ENV_AUTH_USER_NAME + "=" + opts.AuthUser,
 		ENV_AUTH_USER_EMAIL + "=midoks@163.com",
 		ENV_REPO_OWNER_NAME + "=" + opts.OwnerName,
-		// ENV_REPO_OWNER_SALT_MD5 + "=" + cryptoutil.MD5(opts.OwnerSalt),
+		ENV_REPO_OWNER_SALT_MD5 + "=" + cryptoutil.MD5("TkNOFygiTd"),
 		ENV_REPO_ID + "=" + tools.ToStr(opts.RepoID),
 		ENV_REPO_NAME + "=" + opts.RepoName,
 		ENV_REPO_CUSTOM_HOOKS_PATH + "=" + filepath.Join(opts.RepoPath, "custom_hooks"),
