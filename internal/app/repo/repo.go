@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
-	// "path/filepath"
+	"path/filepath"
 	"time"
 
 	"github.com/go-facegit/facegit-rpc/internal/conf"
@@ -37,6 +37,41 @@ type RepoNewestInfo struct {
 type RepoRetList struct {
 	Newest RepoNewestInfo
 	List   []*git.EntryCommitInfo
+}
+
+const (
+	ENV_AUTH_USER_ID           = "FG_AUTH_USER_ID"
+	ENV_AUTH_USER_NAME         = "FG_AUTH_USER_NAME"
+	ENV_AUTH_USER_EMAIL        = "FG_AUTH_USER_EMAIL"
+	ENV_REPO_OWNER_NAME        = "FG_REPO_OWNER_NAME"
+	ENV_REPO_OWNER_SALT_MD5    = "FG_REPO_OWNER_SALT_MD5"
+	ENV_REPO_ID                = "FG_REPO_ID"
+	ENV_REPO_NAME              = "FG_REPO_NAME"
+	ENV_REPO_CUSTOM_HOOKS_PATH = "FG_REPO_CUSTOM_HOOKS_PATH"
+)
+
+type ComposeHookEnvsOptions struct {
+	AuthUser  string
+	OwnerName string
+	OwnerSalt string
+	RepoID    int64
+	RepoName  string
+	RepoPath  string
+}
+
+func ComposeHookEnvs(opts ComposeHookEnvsOptions) []string {
+	envs := []string{
+		"SSH_ORIGINAL_COMMAND=1",
+		ENV_AUTH_USER_ID + "=" + opts.AuthUser,
+		ENV_AUTH_USER_NAME + "=" + opts.AuthUser.Name,
+		ENV_AUTH_USER_EMAIL + "=" + opts.AuthUser.Email,
+		ENV_REPO_OWNER_NAME + "=" + opts.OwnerName,
+		ENV_REPO_OWNER_SALT_MD5 + "=" + cryptoutil.MD5(opts.OwnerSalt),
+		ENV_REPO_ID + "=" + tools.ToStr(opts.RepoID),
+		ENV_REPO_NAME + "=" + opts.RepoName,
+		ENV_REPO_CUSTOM_HOOKS_PATH + "=" + filepath.Join(opts.RepoPath, "custom_hooks"),
+	}
+	return envs
 }
 
 //Init Git Repo Project
@@ -181,7 +216,16 @@ func RepoEditor(UserOrOrg, ProjectName string, opts *pb.ReqUpdateOptions) error 
 		return fmt.Errorf("commit changes on %q: %v", uPath, err)
 	}
 
-	if err := git.RepoPush(uPath, "origin", opts.NewBranch, git.PushOptions{}); err != nil {
+	envs := ComposeHookEnvs(ComposeHookEnvsOptions{
+		AuthUser:  UserOrOrg,
+		OwnerName: repo.MustOwner().Name,
+		OwnerSalt: repo.MustOwner().Salt,
+		RepoID:    repo.ID,
+		RepoName:  repo.Name,
+		RepoPath:  repo.RepoPath(),
+	})
+
+	if err := git.RepoPush(uPath, "origin", opts.NewBranch, git.PushOptions{Envs: envs}); err != nil {
 		return fmt.Errorf("git push origin %s: %v", opts.NewBranch, err)
 	}
 
