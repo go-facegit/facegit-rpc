@@ -63,7 +63,7 @@ func ComposeHookEnvs(opts ComposeHookEnvsOptions) []string {
 	envs := []string{
 		"SSH_ORIGINAL_COMMAND=1",
 		ENV_AUTH_USER_ID + "=" + opts.AuthUser,
-		// ENV_AUTH_USER_NAME + "=" + opts.AuthUser.Name,
+		ENV_AUTH_USER_NAME + "=" + opts.AuthUser,
 		// ENV_AUTH_USER_EMAIL + "=" + opts.AuthUser.Email,
 		ENV_REPO_OWNER_NAME + "=" + opts.OwnerName,
 		// ENV_REPO_OWNER_SALT_MD5 + "=" + cryptoutil.MD5(opts.OwnerSalt),
@@ -217,13 +217,15 @@ func RepoEditor(UserOrOrg, ProjectName string, opts *pb.ReqUpdateOptions) error 
 	}
 
 	envs := ComposeHookEnvs(ComposeHookEnvsOptions{
-		AuthUser: UserOrOrg,
-		// OwnerName: repo.MustOwner().Name,
+		AuthUser:  UserOrOrg,
+		OwnerName: UserOrOrg,
 		// OwnerSalt: repo.MustOwner().Salt,
 		// RepoID:    repo.ID,
-		// RepoName:  repo.Name,
+		RepoName: UserOrOrg,
 		RepoPath: repoPath,
 	})
+
+	fmt.Println("envs:", envs)
 
 	if err := git.RepoPush(uPath, "origin", opts.NewBranch, git.PushOptions{Envs: envs}); err != nil {
 		return fmt.Errorf("git push origin %s: %v", opts.NewBranch, err)
