@@ -187,6 +187,7 @@ func RepoEditor(UserOrOrg, ProjectName string, opts *pb.ReqUpdateOptions) error 
 	tmpPath := path.Join(path.Dir(rootPath), "tmp")
 	uPath := path.Join(tmpPath, UserOrOrg)
 
+	oldFilePath := path.Join(uPath, opts.OldTreeName)
 	filePath := path.Join(uPath, opts.NewTreeName)
 
 	fmt.Println("RepoEditor:", filePath)
@@ -198,6 +199,12 @@ func RepoEditor(UserOrOrg, ProjectName string, opts *pb.ReqUpdateOptions) error 
 	if opts.IsNewFile {
 		if tools.IsExist(filePath) {
 			return fmt.Errorf("File Already Exist[%s]!", filePath)
+		}
+	}
+
+	if tools.IsFile(oldFilePath) && opts.OldTreeName != opts.NewTreeName {
+		if err = git.RepoMove(uPath, opts.OldTreeName, opts.NewTreeName); err != nil {
+			return fmt.Errorf("git mv %q %q: %v", opts.OldTreeName, opts.NewTreeName, err)
 		}
 	}
 
