@@ -53,9 +53,10 @@ message RespStructList{
 
 message RespStructNewest{
   string Message = 1;
-  string Id = 2;
+  string CommitId = 2;
   string AuthorName = 3;
   string When = 4;
+  string BranchName = 5;
 }
 
 message RespList{

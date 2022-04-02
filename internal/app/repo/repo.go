@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/go-facegit/facegit-rpc/internal/conf"
@@ -24,9 +25,10 @@ type Repo struct {
 type RepoNewestInfo struct {
 	AuthorName string
 	Name       string
-	Id         string
+	CommitId   string
 	Message    string
 	When       time.Time
+	BranchName string
 }
 
 type RepoRetList struct {
@@ -169,13 +171,28 @@ func RepoList(UserOrOrg, ProjectName, TreePath string) (error, RepoRetList) {
 	rootPath := conf.Repo.RootPath
 	projPath := fmt.Sprintf("%s/%s", UserOrOrg, ProjectName)
 	repoPath := fmt.Sprintf("%s/%s.git", rootPath, projPath)
+	defaultBranch := "master"
+	selectBranch := ""
 
 	repo.GitRepo, err = git.Open(repoPath)
 	if err != nil {
 		return fmt.Errorf("repository[%s] error: %s", projPath, err), repoList
 	}
 
-	repo.Commit, err = repo.GitRepo.BranchCommit("master")
+	branches, err := repo.GitRepo.Branches()
+	if err != nil {
+		return fmt.Errorf("get branches: %s", err), repoList
+	}
+
+	if len(selectBranch) == 0 {
+		if len(defaultBranch) > 0 && repo.GitRepo.HasBranch(defaultBranch) {
+			selectBranch = defaultBranch
+		} else if len(branches) > 0 {
+			selectBranch = branches[0]
+		}
+	}
+
+	repo.Commit, err = repo.GitRepo.BranchCommit(selectBranch)
 	if err != nil {
 		return fmt.Errorf("repository[%s] commit error: %s", projPath, err), repoList
 	}
@@ -196,7 +213,7 @@ func RepoList(UserOrOrg, ProjectName, TreePath string) (error, RepoRetList) {
 	}
 	entries.Sort()
 
-	fList, err := entries.CommitsInfo(repo.Commit, git.CommitsInfoOptions{
+	fileList, err := entries.CommitsInfo(repo.Commit, git.CommitsInfoOptions{
 		Path:           TreePath,
 		MaxConcurrency: 5,
 		Timeout:        5 * time.Minute,
@@ -212,15 +229,16 @@ func RepoList(UserOrOrg, ProjectName, TreePath string) (error, RepoRetList) {
 
 	info := RepoNewestInfo{
 		AuthorName: latestCommit.Author.Name,
-		Id:         fmt.Sprintf("%s", latestCommit.ID),
+		CommitId:   fmt.Sprintf("%s", latestCommit.ID),
 		Message:    latestCommit.Message,
 		Name:       entry.Name(),
 		When:       latestCommit.Author.When,
+		BranchName: selectBranch,
 	}
 
 	repoList = RepoRetList{
 		Newest: info,
-		List:   fList,
+		List:   fileList,
 	}
 
 	// for k, v := range fList {
@@ -307,12 +325,27 @@ func RepoCreateMirror(RemoteAddr, UserOrOrg, ProjectName string) error {
 	repoPath := fmt.Sprintf("%s/%s/%s.git", rootPath, UserOrOrg, ProjectName)
 	wikiPath := fmt.Sprintf("%s/%s/%s.wiki.git", rootPath, UserOrOrg, ProjectName)
 
+	if tools.IsExist(repoPath) {
+		return nil
+	}
+
+	migrateTimeout := time.Duration(600) * time.Second
 	if err := git.Clone(RemoteAddr, repoPath, git.CloneOptions{
 		Mirror:  true,
 		Quiet:   true,
-		Timeout: 1000,
+		Timeout: migrateTimeout,
 	}); err != nil {
 		return fmt.Errorf("clone: %v", err)
+	}
+
+	// Check if repository is empty.
+	_, stderr, err := tools.ExecCmdDir(repoPath, "git", "log", "-1")
+	if err != nil {
+		if strings.Contains(stderr, "fatal: bad default revision 'HEAD'") {
+			return fmt.Errorf("fatal: bad default revision 'HEAD' : %v - %s", err, stderr)
+		} else {
+			return fmt.Errorf("check bare: %v - %s", err, stderr)
+		}
 	}
 
 	wikiRemotePath := wikiRemoteURL(RemoteAddr)
@@ -320,10 +353,14 @@ func RepoCreateMirror(RemoteAddr, UserOrOrg, ProjectName string) error {
 		if err := git.Clone(wikiRemotePath, wikiPath, git.CloneOptions{
 			Mirror:  true,
 			Quiet:   true,
-			Timeout: 1000,
+			Timeout: migrateTimeout,
 		}); err != nil {
 			return fmt.Errorf("Failed to clone wiki: %v", err)
 		}
 	}
+	return nil
+}
+
+func RepoUpdateMirror(RemoteAddr, UserOrOrg, ProjectName string) error {
 	return nil
 }

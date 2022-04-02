@@ -45,9 +45,10 @@ func (s *Server) List(ctx context.Context, message *pb.ReqList) (*pb.RespList, e
 	return &pb.RespList{
 		Newest: &pb.RespStructNewest{
 			Message:    data.Newest.Message,
-			Id:         data.Newest.Id,
+			CommitId:   data.Newest.CommitId,
 			AuthorName: data.Newest.AuthorName,
 			When:       data.Newest.When.String(),
+			BranchName: data.Newest.BranchName,
 		},
 		List: retList,
 	}, nil
