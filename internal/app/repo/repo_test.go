@@ -36,7 +36,7 @@ func getClient() (*rpc.Client, error) {
 	return client, err
 }
 
-func TestRepoCreate(t *testing.T) {
+func DD_TestRepoCreate(t *testing.T) {
 
 	client, err := getClient()
 	if err != nil {
