@@ -24,7 +24,7 @@ func localServer() {
 	}
 }
 
-func init() {
+func initDD() {
 	// go localServer()
 
 	router.Init("")
