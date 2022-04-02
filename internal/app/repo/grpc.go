@@ -61,3 +61,13 @@ func (s *Server) Editor(ctx context.Context, opts *pb.ReqUpdateOptions) (*pb.Res
 	}
 	return &pb.RespBool{TrueOrFalse: false}, err
 }
+
+// ------ mirror ---------
+
+func (s *Server) CreateMirror(ctx context.Context, opts *pb.ReqMirror) (*pb.RespBool, error) {
+	err := RepoCreateMirror(opts.RemoteAddr, opts.UserOrOrg, opts.ProjectName)
+	if err == nil {
+		return &pb.RespBool{TrueOrFalse: true}, nil
+	}
+	return &pb.RespBool{TrueOrFalse: false}, nil
+}

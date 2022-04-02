@@ -307,3 +307,29 @@ func RepoEditorFile(UserOrOrg, ProjectName string, opts *pb.ReqUpdateOptions) er
 
 	return nil
 }
+
+func RepoCreateMirror(RemoteAddr, UserOrOrg, ProjectName string) error {
+	rootPath := conf.Repo.RootPath
+	repoPath := fmt.Sprintf("%s/%s/%s.git", rootPath, UserOrOrg, ProjectName)
+	wikiPath := fmt.Sprintf("%s/%s/%s.wiki.git", rootPath, UserOrOrg, ProjectName)
+
+	if err := git.Clone(RemoteAddr, repoPath, git.CloneOptions{
+		Mirror:  true,
+		Quiet:   true,
+		Timeout: 1000,
+	}); err != nil {
+		return fmt.Errorf("clone: %v", err)
+	}
+
+	wikiRemotePath := wikiRemoteURL(RemoteAddr)
+	if len(wikiRemotePath) > 0 {
+		if err := git.Clone(wikiRemotePath, wikiPath, git.CloneOptions{
+			Mirror:  true,
+			Quiet:   true,
+			Timeout: 1000,
+		}); err != nil {
+			return fmt.Errorf("Failed to clone wiki: %v", err)
+		}
+	}
+	return nil
+}
