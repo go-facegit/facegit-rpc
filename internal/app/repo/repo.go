@@ -21,12 +21,6 @@ type Repo struct {
 	GitRepo *git.Repository
 }
 
-type RepoCreateArgs struct {
-	UserOrOrg   string
-	ProjectName string
-	TreePath    string
-}
-
 type RepoNewestInfo struct {
 	AuthorName string
 	Name       string
