@@ -59,6 +59,10 @@ message RespStructNewest{
   string AuthorName = 3;
   string When = 4;
   string BranchName = 5;
+  bool IsHasReadme = 6;
+  string Readme = 7;
+  string ReadmeFileName = 8;
+  int64 ReadmeFileSize = 9;
 }
 
 message RespList{

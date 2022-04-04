@@ -23,12 +23,16 @@ type Repo struct {
 }
 
 type RepoNewestInfo struct {
-	AuthorName string
-	Name       string
-	CommitId   string
-	Message    string
-	When       time.Time
-	BranchName string
+	AuthorName     string
+	Name           string
+	CommitId       string
+	Message        string
+	When           time.Time
+	BranchName     string
+	IsHasReadme    bool
+	Readme         string
+	ReadmeFileName string
+	ReadmeFileSize int64
 }
 
 type RepoRetList struct {
@@ -69,6 +73,10 @@ func ComposeHookEnvs(opts ComposeHookEnvsOptions) []string {
 		ENV_REPO_CUSTOM_HOOKS_PATH + "=" + filepath.Join(opts.RepoPath, "custom_hooks"),
 	}
 	return envs
+}
+
+func IsReadmeFile(name string) bool {
+	return strings.HasPrefix(strings.ToLower(name), "readme")
 }
 
 // discardLocalRepoBranchChanges discards local commits/changes of
@@ -227,23 +235,49 @@ func RepoList(UserOrOrg, ProjectName, TreePath string) (error, RepoRetList) {
 		}
 	}
 
+	isHasReadme := false
+	readMe := ""
+	readmeFileName := ""
+	var readmeFile *git.Blob
+	for _, v := range fileList {
+		if v.Entry.IsTree() || !IsReadmeFile(v.Entry.Name()) {
+			continue
+		}
+		isHasReadme = true
+		readmeFileName = v.Entry.Name()
+		readmeFile = v.Entry.Blob()
+		break
+	}
+
+	if readmeFile != nil {
+		p, err := readmeFile.Bytes()
+		if err != nil {
+			return fmt.Errorf("get readme error: %s", err), repoList
+		}
+		readMe = string(p)
+	}
+
+	// for k, v := range fileList {
+	// 	fmt.Println(k, v.Entry.Name(), v.Commit.ID, v.Entry.Type())
+	// }
+
 	info := RepoNewestInfo{
-		AuthorName: latestCommit.Author.Name,
-		CommitId:   fmt.Sprintf("%s", latestCommit.ID),
-		Message:    latestCommit.Message,
-		Name:       entry.Name(),
-		When:       latestCommit.Author.When,
-		BranchName: selectBranch,
+		AuthorName:     latestCommit.Author.Name,
+		CommitId:       fmt.Sprintf("%s", latestCommit.ID),
+		Message:        latestCommit.Message,
+		Name:           entry.Name(),
+		When:           latestCommit.Author.When,
+		BranchName:     selectBranch,
+		IsHasReadme:    isHasReadme,
+		Readme:         readMe,
+		ReadmeFileName: readmeFileName,
+		ReadmeFileSize: readmeFile.Size(),
 	}
 
 	repoList = RepoRetList{
 		Newest: info,
 		List:   fileList,
 	}
-
-	// for k, v := range fList {
-	// 	fmt.Println(k, v.Entry.Name(), v.Commit.ID, v.Entry.Type())
-	// }
 
 	return nil, repoList
 }
