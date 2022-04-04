@@ -29,14 +29,15 @@ func (s *Server) List(ctx context.Context, message *pb.ReqList) (*pb.RespList, e
 	}
 
 	list := data.List
-	var retList []*pb.RespStructList
+	var retList []*pb.RespFileList
 	for _, v := range list {
 
-		t := &pb.RespStructList{
+		t := &pb.RespFileList{
 			Name:     v.Entry.Name(),
 			CommitId: fmt.Sprintf("%s", v.Commit.ID),
 			Type:     fmt.Sprintf("%s", v.Entry.Type()),
 			When:     v.Commit.Committer.When.String(),
+			Message:  v.Commit.Message,
 		}
 
 		retList = append(retList, t)

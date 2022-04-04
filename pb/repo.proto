@@ -44,11 +44,13 @@ message RespBool{
   bool TrueOrFalse = 1;
 }
 
-message RespStructList{
+message RespFileList{
   string Name = 1;
   string CommitId = 2;
   string Type = 3;
   string When = 4;
+  string Message = 5;
+
 }
 
 message RespStructNewest{
@@ -61,7 +63,7 @@ message RespStructNewest{
 
 message RespList{
   RespStructNewest Newest = 1;
-  repeated RespStructList List = 2;
+  repeated RespFileList List = 2;
 }
 
 
