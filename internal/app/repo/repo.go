@@ -238,6 +238,7 @@ func RepoList(UserOrOrg, ProjectName, TreePath string) (error, RepoRetList) {
 	isHasReadme := false
 	readMe := ""
 	readmeFileName := ""
+	var readmeFileSize int64
 	var readmeFile *git.Blob
 	for _, v := range fileList {
 		if v.Entry.IsTree() || !IsReadmeFile(v.Entry.Name()) {
@@ -246,15 +247,17 @@ func RepoList(UserOrOrg, ProjectName, TreePath string) (error, RepoRetList) {
 		isHasReadme = true
 		readmeFileName = v.Entry.Name()
 		readmeFile = v.Entry.Blob()
+
 		break
 	}
 
-	if readmeFile != nil {
-		p, err := readmeFile.Bytes()
+	if readmeFile != nil && isHasReadme {
+		content, err := readmeFile.Bytes()
+		readmeFileSize = readmeFile.Size()
 		if err != nil {
 			return fmt.Errorf("get readme error: %s", err), repoList
 		}
-		readMe = string(p)
+		readMe = string(content)
 	}
 
 	// for k, v := range fileList {
@@ -271,7 +274,7 @@ func RepoList(UserOrOrg, ProjectName, TreePath string) (error, RepoRetList) {
 		IsHasReadme:    isHasReadme,
 		Readme:         readMe,
 		ReadmeFileName: readmeFileName,
-		ReadmeFileSize: readmeFile.Size(),
+		ReadmeFileSize: readmeFileSize,
 	}
 
 	repoList = RepoRetList{
