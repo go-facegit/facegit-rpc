@@ -2,7 +2,6 @@ package repo
 
 import (
 	// "log"
-	"fmt"
 
 	"github.com/go-facegit/facegit-rpc/pb"
 	"golang.org/x/net/context"
@@ -27,36 +26,7 @@ func (s *Server) List(ctx context.Context, message *pb.ReqList) (*pb.RespList, e
 	if err != nil {
 		return &pb.RespList{}, err
 	}
-
-	list := data.List
-	var retList []*pb.RespFileList
-	for _, v := range list {
-
-		t := &pb.RespFileList{
-			Name:     v.Entry.Name(),
-			CommitId: fmt.Sprintf("%s", v.Commit.ID),
-			Type:     fmt.Sprintf("%s", v.Entry.Type()),
-			When:     v.Commit.Committer.When.String(),
-			Message:  v.Commit.Message,
-		}
-
-		retList = append(retList, t)
-	}
-
-	return &pb.RespList{
-		Newest: &pb.RespStructNewest{
-			Message:        data.Newest.Message,
-			CommitId:       data.Newest.CommitId,
-			AuthorName:     data.Newest.AuthorName,
-			When:           data.Newest.When.String(),
-			BranchName:     data.Newest.BranchName,
-			IsHasReadme:    data.Newest.IsHasReadme,
-			Readme:         data.Newest.Readme,
-			ReadmeFileName: data.Newest.ReadmeFileName,
-			ReadmeFileSize: data.Newest.ReadmeFileSize,
-		},
-		List: retList,
-	}, nil
+	return data, nil
 }
 
 func (s *Server) Editor(ctx context.Context, opts *pb.ReqUpdateOptions) (*pb.RespBool, error) {

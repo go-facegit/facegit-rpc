@@ -60,14 +60,20 @@ message RespStructNewest{
   string When = 4;
   string BranchName = 5;
   bool IsHasReadme = 6;
-  string Readme = 7;
-  string ReadmeFileName = 8;
-  int64 ReadmeFileSize = 9;
+  string ResponeType = 7;
+}
+
+
+message RespSingle{
+  string Name = 1;
+  int64 Size = 2;
+  string Content = 3;
 }
 
 message RespList{
   RespStructNewest Newest = 1;
-  repeated RespFileList List = 2;
+  RespSingle Single = 2;
+  repeated RespFileList List = 3;
 }
 
 

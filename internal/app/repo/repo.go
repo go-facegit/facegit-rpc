@@ -17,27 +17,100 @@ import (
 )
 
 type Repo struct {
-	Commit  *git.Commit
+	Commit     *git.Commit
+	LastCommit *git.Commit
+
 	Tag     *git.Tag
 	GitRepo *git.Repository
+
+	TipPath string
+	Path    string
 }
 
-type RepoNewestInfo struct {
-	AuthorName     string
-	Name           string
-	CommitId       string
-	Message        string
-	When           time.Time
-	BranchName     string
-	IsHasReadme    bool
-	Readme         string
-	ReadmeFileName string
-	ReadmeFileSize int64
+func (repo *Repo) Init(UserOrOrg, ProjectName string) error {
+	rootPath := conf.Repo.RootPath
+	repo.TipPath = fmt.Sprintf("%s/%s", UserOrOrg, ProjectName)
+	repo.Path = fmt.Sprintf("%s/%s.git", rootPath, repo.TipPath)
+
+	var err error
+	repo.GitRepo, err = git.Open(repo.Path)
+	if err != nil {
+		return fmt.Errorf("repository[%s] error: %s", repo.TipPath, err)
+	}
+
+	return nil
 }
 
-type RepoRetList struct {
-	Newest RepoNewestInfo
-	List   []*git.EntryCommitInfo
+func (repo *Repo) RequestPath(path string) error {
+	var err error
+	repo.LastCommit = repo.Commit
+	if len(path) > 0 {
+		repo.LastCommit, err = repo.Commit.CommitByPath(git.CommitByRevisionOptions{Path: path})
+		if err != nil {
+			return fmt.Errorf("repository[%s] get commit by path: %s", repo.TipPath, err)
+		}
+	}
+	return nil
+}
+
+func (repo *Repo) GetReadme(entry *git.TreeEntry) (*pb.RespSingle, error) {
+
+	data := &pb.RespSingle{}
+	var readmeFile *git.Blob
+
+	data.Name = entry.Name()
+
+	readmeFile = entry.Blob()
+	data.Size = readmeFile.Size()
+
+	tmp, err := readmeFile.Bytes()
+	if err != nil {
+		return data, fmt.Errorf("repository[%s] get readme error: %s", repo.TipPath, err)
+	}
+
+	data.Content = string(tmp)
+	return data, nil
+}
+
+func (repo *Repo) GetFile(entry *git.TreeEntry) (*pb.RespSingle, error) {
+
+	data := &pb.RespSingle{}
+	var readmeFile *git.Blob
+
+	data.Name = entry.Name()
+
+	readmeFile = entry.Blob()
+	data.Size = readmeFile.Size()
+
+	tmp, err := readmeFile.Bytes()
+	if err != nil {
+		return data, fmt.Errorf("repository[%s] get file error: %s", repo.TipPath, err)
+	}
+
+	data.Content = string(tmp)
+	return data, nil
+}
+
+func (repo *Repo) GetFileList(path string) ([]*git.EntryCommitInfo, error) {
+	var data []*git.EntryCommitInfo
+
+	tree, err := repo.Commit.Subtree(path)
+	if err != nil {
+		return data, fmt.Errorf("repository[%s] subtree error: %s", repo.TipPath, err)
+	}
+
+	entries, err := tree.Entries()
+	if err != nil {
+		return data, fmt.Errorf("repository[%s] entries error: %s ", repo.TipPath, err)
+	}
+	entries.Sort()
+
+	data, err = entries.CommitsInfo(repo.Commit, git.CommitsInfoOptions{
+		Path:           path,
+		MaxConcurrency: 5,
+		Timeout:        5 * time.Minute,
+	})
+	return data, err
 }
 
 const (
@@ -171,25 +244,23 @@ func RepoDelete(UserOrOrg, ProjectName string) (bool, error) {
 	return true, nil
 }
 
-func RepoList(UserOrOrg, ProjectName, TreePath string) (error, RepoRetList) {
+func RepoList(UserOrOrg, ProjectName, TreePath string) (error, *pb.RespList) {
 
 	var err error
 	repo := Repo{}
-	repoList := RepoRetList{}
-	rootPath := conf.Repo.RootPath
+	data := &pb.RespList{}
 	projPath := fmt.Sprintf("%s/%s", UserOrOrg, ProjectName)
-	repoPath := fmt.Sprintf("%s/%s.git", rootPath, projPath)
 	defaultBranch := "master"
 	selectBranch := ""
 
-	repo.GitRepo, err = git.Open(repoPath)
+	err = repo.Init(UserOrOrg, ProjectName)
 	if err != nil {
-		return fmt.Errorf("repository[%s] error: %s", projPath, err), repoList
+		return err, data
 	}
 
 	branches, err := repo.GitRepo.Branches()
 	if err != nil {
-		return fmt.Errorf("get branches: %s", err), repoList
+		return fmt.Errorf("get branches: %s", err), data
 	}
 
 	if len(selectBranch) == 0 {
@@ -198,91 +269,99 @@ func RepoList(UserOrOrg, ProjectName, TreePath string) (error, RepoRetList) {
 		} else if len(branches) > 0 {
 			selectBranch = branches[0]
 		}
+
 	}
 
 	repo.Commit, err = repo.GitRepo.BranchCommit(selectBranch)
 	if err != nil {
-		return fmt.Errorf("repository[%s] commit error: %s", projPath, err), repoList
+		return fmt.Errorf("repository[%s] commit error: %s", projPath, err), data
 	}
 
 	entry, err := repo.Commit.TreeEntry(TreePath)
 	if err != nil {
-		return fmt.Errorf("repository[%s] get tree entry error: %s", projPath, err), repoList
+		return fmt.Errorf("repository[%s] get tree entry error: %s", projPath, err), data
 	}
 
-	tree, err := repo.Commit.Subtree(TreePath)
+	err = repo.RequestPath(TreePath)
 	if err != nil {
-		return fmt.Errorf("repository[%s] subtree error: %s", projPath, err), repoList
+		return err, data
 	}
 
-	entries, err := tree.Entries()
-	if err != nil {
-		return fmt.Errorf("%s: list entries", err), repoList
-	}
-	entries.Sort()
-
-	fileList, err := entries.CommitsInfo(repo.Commit, git.CommitsInfoOptions{
-		Path:           TreePath,
-		MaxConcurrency: 5,
-		Timeout:        5 * time.Minute,
-	})
-
-	latestCommit := repo.Commit
-	if len(TreePath) > 0 {
-		latestCommit, err = repo.Commit.CommitByPath(git.CommitByRevisionOptions{Path: TreePath})
-		if err != nil {
-			return fmt.Errorf("get commit by path: %s", err), repoList
-		}
-	}
-
+	responeType := "tree"
 	isHasReadme := false
-	readMe := ""
-	readmeFileName := ""
-	var readmeFileSize int64
-	var readmeFile *git.Blob
+
+	if !entry.IsTree() {
+		responeType = "file"
+
+		// newest
+		data.Newest = &pb.RespStructNewest{
+			Message:     repo.LastCommit.Message,
+			CommitId:    fmt.Sprintf("%s", repo.LastCommit.ID),
+			AuthorName:  repo.LastCommit.Author.Name,
+			When:        repo.LastCommit.Author.When.String(),
+			BranchName:  selectBranch,
+			IsHasReadme: isHasReadme,
+			ResponeType: responeType,
+		}
+
+		tmp, err := repo.GetFile(entry)
+		if err != nil {
+			return err, data
+		}
+
+		//single
+		data.Single = tmp
+		return nil, data
+	}
+
+	fileList, err := repo.GetFileList(TreePath)
+	if err != nil {
+		return err, data
+	}
+
 	for _, v := range fileList {
 		if v.Entry.IsTree() || !IsReadmeFile(v.Entry.Name()) {
 			continue
 		}
+		tmp, err := repo.GetFile(v.Entry)
+		if err != nil {
+			return err, data
+		}
 		isHasReadme = true
-		readmeFileName = v.Entry.Name()
-		readmeFile = v.Entry.Blob()
 
+		//single
+		data.Single = tmp
 		break
 	}
 
-	if readmeFile != nil && isHasReadme {
-		content, err := readmeFile.Bytes()
-		readmeFileSize = readmeFile.Size()
-		if err != nil {
-			return fmt.Errorf("get readme error: %s", err), repoList
+	// newest
+	data.Newest = &pb.RespStructNewest{
+		Message:     repo.LastCommit.Message,
+		CommitId:    fmt.Sprintf("%s", repo.LastCommit.ID),
+		AuthorName:  repo.LastCommit.Author.Name,
+		When:        repo.LastCommit.Author.When.String(),
+		BranchName:  selectBranch,
+		IsHasReadme: isHasReadme,
+		ResponeType: responeType,
+	}
+
+	//list
+	var retList []*pb.RespFileList
+	for _, f := range fileList {
+
+		t := &pb.RespFileList{
+			Name:     f.Entry.Name(),
+			CommitId: fmt.Sprintf("%s", f.Commit.ID),
+			Type:     fmt.Sprintf("%s", f.Entry.Type()),
+			When:     f.Commit.Committer.When.String(),
+			Message:  f.Commit.Message,
 		}
-		readMe = string(content)
+
+		retList = append(retList, t)
 	}
+	data.List = retList
 
-	// for k, v := range fileList {
-	// 	fmt.Println(k, v.Entry.Name(), v.Commit.ID, v.Entry.Type())
-	// }
-
-	info := RepoNewestInfo{
-		AuthorName:     latestCommit.Author.Name,
-		CommitId:       fmt.Sprintf("%s", latestCommit.ID),
-		Message:        latestCommit.Message,
-		Name:           entry.Name(),
-		When:           latestCommit.Author.When,
-		BranchName:     selectBranch,
-		IsHasReadme:    isHasReadme,
-		Readme:         readMe,
-		ReadmeFileName: readmeFileName,
-		ReadmeFileSize: readmeFileSize,
-	}
-
-	repoList = RepoRetList{
-		Newest: info,
-		List:   fileList,
-	}
-
-	return nil, repoList
+	return nil, data
 }
 
 func RepoEditorFile(UserOrOrg, ProjectName string, opts *pb.ReqUpdateOptions) error {
