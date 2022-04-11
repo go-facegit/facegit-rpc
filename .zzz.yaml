@@ -21,5 +21,8 @@ action:
   - go generate internal/assets/conf/conf.go
   - protoc --go_out=plugins=grpc:./pb ./pb/repo.proto
   after:
-  - ps -ef|grep 'facegit-rpc run'| grep -v grep | awk '{print $2}' | xargs kill -9  && ./facegit-rpc run &
+  - ./facegit-rpc run &
+  exit:
+  - ps -ef|grep 'facegit-rpc run'| grep -v grep
+  - ps -ef|grep 'facegit-rpc run'| grep -v grep | awk '{print $2}' | xargs kill -9 
 link: https://github.com/midoks/zzz
